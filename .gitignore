@@ -31,3 +31,14 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Local databases
+*.sqlite
+*.sqlite3
