@@ -21,6 +21,7 @@ from app.routers.notifications import router as notifications_router
 from app.routers.assets import router as assets_router
 from app.routers.audit_logs import router as audit_logs_router
 from app.routers.departments import router as departments_router
+from app.routers.roles import router as roles_router
 
 
 app = FastAPI(
@@ -54,6 +55,7 @@ app.include_router(notifications_router)
 app.include_router(assets_router)
 app.include_router(audit_logs_router)
 app.include_router(departments_router)
+app.include_router(roles_router)
 
 
 @app.on_event("startup")
