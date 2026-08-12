@@ -12,10 +12,16 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return bcrypt.checkpw(
-        plain_password.encode("utf-8"),
-        hashed_password.encode("utf-8"),
-    )
+    try:
+        return bcrypt.checkpw(
+            plain_password.encode("utf-8"),
+            hashed_password.encode("utf-8"),
+        )
+    except (ValueError, TypeError):
+        # hashed_password wasn't a valid bcrypt hash (e.g. plaintext row
+        # inserted directly into the DB, bypassing hash_password()).
+        # Treat it as a failed login instead of crashing the request.
+        return False
 
 
 def create_access_token(data: dict) -> str:
