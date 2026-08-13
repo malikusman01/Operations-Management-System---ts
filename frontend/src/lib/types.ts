@@ -15,6 +15,17 @@ export interface User {
   role: Role;
   department: string;
   status: UserStatus;
+  /** Raw foreign keys from the backend, used to select/persist role &
+   * department in forms. Display uses `role`/`department` (name strings). */
+  roleId?: string;
+  departmentId?: string;
+}
+
+/** A role row as returned by GET /roles — id + name, distinct from the
+ * `Role` display-name union above. */
+export interface RoleRecord {
+  id: string;
+  name: string;
 }
 
 export interface Department {

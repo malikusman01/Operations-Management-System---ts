@@ -2,13 +2,14 @@
 // Set VITE_API_URL in `.env` to point at FastAPI; leave empty to use mocks.
 import { api, USE_MOCK, AUTH_MODE, apiError } from "./api";
 import { store } from "./store";
+import { ROLES } from "./mock";
 import {
   fromAsset, fromAuditLog, fromDepartment, fromNotification,
-  fromProject, fromTask, fromTicket, fromUser, mapList, toTask, toTicket, toUser,
+  fromProject, fromRole, fromTask, fromTicket, fromUser, mapList, toTask, toTicket, toUser,
 } from "./adapters";
 import type {
   Asset, AuditLog, Department, KnowledgeArticle, Notification, PermissionLevel,
-  Project, RoleMatrix, Task, Ticket, User,
+  Project, RoleMatrix, RoleRecord, Task, Ticket, User,
 } from "./types";
 
 const wait = <T,>(data: T, ms = 200) => new Promise<T>((r) => setTimeout(() => r(data), ms));
@@ -346,6 +347,15 @@ export const knowledgeBaseService = {
 };
 
 export const rolesService = {
+  list: async (): Promise<RoleRecord[]> => {
+    // ROLES (from mock.ts) is a plain string list used elsewhere for the
+    // permission matrix; give it stable synthetic ids here so the Users
+    // form works the same way in mock mode as it does against the real
+    // /roles endpoint.
+    if (USE_MOCK) return wait(ROLES.map((name, i) => ({ id: String(i + 1), name })));
+    const { data } = await api.get("/roles");
+    return mapList(fromRole)(data);
+  },
   matrix: async (): Promise<RoleMatrix> => {
     if (USE_MOCK) return wait(store.roleMatrix.get());
     const { data } = await api.get("/roles/matrix");

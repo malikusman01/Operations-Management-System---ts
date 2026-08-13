@@ -1,6 +1,6 @@
 // Translate FastAPI snake_case payloads <-> frontend camelCase types.
 // Adjust field names here if your backend schemas differ.
-import type { Asset, AuditLog, Department, Notification, Project, Task, Ticket, User } from "./types";
+import type { Asset, AuditLog, Department, Notification, Project, RoleRecord, Task, Ticket, User } from "./types";
 
 type AnyRec = Record<string, unknown>;
 const s = (v: unknown) => (v == null ? "" : String(v));
@@ -9,9 +9,16 @@ export const fromUser = (r: AnyRec): User => ({
   id: s(r.id ?? r.user_id),
   fullName: s(r.full_name ?? r.fullName ?? r.name),
   email: s(r.email),
+  // Backend only returns role_id/department_id (foreign keys), not name
+  // strings. The Users page resolves the display name itself by cross-
+  // referencing the fetched /roles and /departments lists against these
+  // raw ids. Fall back to "IT Technician" only when there's truly no id
+  // at all (e.g. mock data / a user with no role assigned yet).
   role: (r.role ?? r.role_name ?? "IT Technician") as User["role"],
   department: s(r.department ?? r.department_name ?? ""),
   status: (r.is_active === false || r.status === "Inactive" ? "Inactive" : "Active") as User["status"],
+  roleId: r.role_id != null ? s(r.role_id) : undefined,
+  departmentId: r.department_id != null ? s(r.department_id) : undefined,
 });
 
 export const toUser = (u: Partial<User> & { password?: string }): AnyRec => {
@@ -21,13 +28,15 @@ export const toUser = (u: Partial<User> & { password?: string }): AnyRec => {
     is_active: u.status ? u.status === "Active" : undefined,
   };
   if (u.password) body.password = u.password;
-  // NOTE: the backend User table only stores role_id/department_id (foreign
-  // keys), not name strings, and there's no /roles endpoint yet to resolve a
-  // role name to an id. Role assignment isn't wired end-to-end yet — see the
-  // note in users.tsx. department_id is left out here too until the Users
-  // form is given real department objects (with ids) instead of names.
+  if (u.roleId !== undefined) body.role_id = u.roleId === "" ? null : Number(u.roleId);
+  if (u.departmentId !== undefined) body.department_id = u.departmentId === "" ? null : Number(u.departmentId);
   return body;
 };
+
+export const fromRole = (r: AnyRec): RoleRecord => ({
+  id: s(r.id),
+  name: s(r.name),
+});
 
 export const fromDepartment = (r: AnyRec): Department => ({
   id: s(r.id),

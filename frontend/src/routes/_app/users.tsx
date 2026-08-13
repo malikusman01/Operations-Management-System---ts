@@ -13,7 +13,7 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import { PageHeader } from "@/components/app/page-header";
-import { usersService } from "@/lib/services";
+import { departmentsService, rolesService, usersService } from "@/lib/services";
 import { Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import type { User } from "@/lib/types";
@@ -23,37 +23,62 @@ export const Route = createFileRoute("/_app/users")({
   component: UsersPage,
 });
 
-const ROLES = ["Manager IT","Assistant Manager IT","Network Administrator","Web Developer","IT Technician","System Administrator"];
-
-type FormState = { fullName: string; email: string; password: string; role: string; department: string };
-const emptyForm: FormState = { fullName: "", email: "", password: "", role: ROLES[0], department: "" };
+type FormState = {
+  fullName: string; email: string; password: string;
+  roleId: string; departmentId: string;
+};
+const emptyForm: FormState = { fullName: "", email: "", password: "", roleId: "", departmentId: "" };
 
 function UsersPage() {
   const qc = useQueryClient();
   const { data: users = [], isLoading } = useQuery({ queryKey: ["users"], queryFn: usersService.list });
+  const { data: roles = [] } = useQuery({ queryKey: ["roles"], queryFn: rolesService.list });
+  const { data: departments = [] } = useQuery({ queryKey: ["departments"], queryFn: departmentsService.list });
+
   const [q, setQ] = useState("");
-  const [role, setRole] = useState("all");
-  const [dept, setDept] = useState("all");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [deptFilter, setDeptFilter] = useState("all");
 
   const [open, setOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
 
-  const departments = useMemo(() => Array.from(new Set(users.map((u) => u.department).filter(Boolean))), [users]);
+  // Resolve a user's role/department display name: prefer the id-based
+  // lookup against the real /roles and /departments lists (this is what
+  // actually reflects what's saved in the database); fall back to
+  // whatever name string fromUser() produced (covers older mock data that
+  // has no roleId/departmentId at all).
+  const roleName = (u: User) => roles.find((r) => r.id === u.roleId)?.name ?? u.role;
+  const deptName = (u: User) => departments.find((d) => d.id === u.departmentId)?.name ?? u.department;
 
   const filtered = useMemo(() => users.filter((u) =>
-    (role === "all" || u.role === role) &&
-    (dept === "all" || u.department === dept) &&
+    (roleFilter === "all" || roleName(u) === roleFilter) &&
+    (deptFilter === "all" || deptName(u) === deptFilter) &&
     (q === "" || u.fullName.toLowerCase().includes(q.toLowerCase()) || u.email.toLowerCase().includes(q.toLowerCase()))
-  ), [users, q, role, dept]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  ), [users, q, roleFilter, deptFilter, roles, departments]);
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ["users"] });
+
+  const buildPayload = (): Partial<User> & { password?: string } => {
+    const selectedRole = roles.find((r) => r.id === form.roleId);
+    const selectedDept = departments.find((d) => d.id === form.departmentId);
+    return {
+      fullName: form.fullName,
+      email: form.email,
+      password: form.password || undefined,
+      roleId: form.roleId || undefined,
+      role: (selectedRole?.name as User["role"]) ?? undefined,
+      departmentId: form.departmentId || undefined,
+      department: selectedDept?.name ?? undefined,
+    };
+  };
 
   const createMutation = useMutation({
-    mutationFn: () => usersService.create({
-      fullName: form.fullName, email: form.email, password: form.password,
-    }),
+    mutationFn: () => usersService.create(buildPayload()),
     onSuccess: () => {
       toast.success("User created");
-      qc.invalidateQueries({ queryKey: ["users"] });
+      invalidate();
       setOpen(false);
       setForm(emptyForm);
     },
@@ -61,12 +86,13 @@ function UsersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (id: string) => usersService.update(id, {
-      fullName: form.fullName, email: form.email,
-    }),
+    mutationFn: (id: string) => {
+      const { password: _password, ...rest } = buildPayload();
+      return usersService.update(id, rest);
+    },
     onSuccess: () => {
       toast.success("User updated");
-      qc.invalidateQueries({ queryKey: ["users"] });
+      invalidate();
       setOpen(false);
       setEditingId(null);
       setForm(emptyForm);
@@ -78,7 +104,7 @@ function UsersPage() {
     mutationFn: (u: User) => usersService.update(u.id, { status: u.status === "Active" ? "Inactive" : "Active" }),
     onSuccess: () => {
       toast.success("Status updated");
-      qc.invalidateQueries({ queryKey: ["users"] });
+      invalidate();
     },
     onError: (e: Error) => toast.error(e.message || "Could not update status"),
   });
@@ -86,7 +112,11 @@ function UsersPage() {
   const openCreate = () => { setEditingId(null); setForm(emptyForm); setOpen(true); };
   const openEdit = (u: User) => {
     setEditingId(u.id);
-    setForm({ fullName: u.fullName, email: u.email, password: "", role: u.role, department: u.department });
+    // Prefer the real id if present; otherwise best-effort match by name
+    // (covers users created before roleId/departmentId were saved).
+    const roleId = u.roleId ?? roles.find((r) => r.name === u.role)?.id ?? "";
+    const departmentId = u.departmentId ?? departments.find((d) => d.name === u.department)?.id ?? "";
+    setForm({ fullName: u.fullName, email: u.email, password: "", roleId, departmentId });
     setOpen(true);
   };
 
@@ -130,15 +160,21 @@ function UsersPage() {
                 )}
                 <div>
                   <Label>Role</Label>
-                  <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <Select value={form.roleId} onValueChange={(v) => setForm({ ...form, roleId: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select a role" /></SelectTrigger>
                     <SelectContent>
-                      {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                      {roles.map((r) => <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Role assignment isn't saved to the backend yet — the Roles module has no API endpoint.
-                  </p>
+                </div>
+                <div>
+                  <Label>Department</Label>
+                  <Select value={form.departmentId} onValueChange={(v) => setForm({ ...form, departmentId: v })}>
+                    <SelectTrigger><SelectValue placeholder="Select a department" /></SelectTrigger>
+                    <SelectContent>
+                      {departments.map((d) => <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
@@ -158,18 +194,18 @@ function UsersPage() {
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input placeholder="Search by name or email…" className="pl-8" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
-          <Select value={role} onValueChange={setRole}>
+          <Select value={roleFilter} onValueChange={setRoleFilter}>
             <SelectTrigger className="md:w-56"><SelectValue placeholder="Role" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All roles</SelectItem>
-              {ROLES.map((r) => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              {roles.map((r) => <SelectItem key={r.id} value={r.name}>{r.name}</SelectItem>)}
             </SelectContent>
           </Select>
-          <Select value={dept} onValueChange={setDept}>
+          <Select value={deptFilter} onValueChange={setDeptFilter}>
             <SelectTrigger className="md:w-48"><SelectValue placeholder="Department" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All departments</SelectItem>
-              {departments.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+              {departments.map((d) => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
             </SelectContent>
           </Select>
         </CardContent>
@@ -202,8 +238,8 @@ function UsersPage() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>{u.role}</TableCell>
-                    <TableCell>{u.department}</TableCell>
+                    <TableCell>{roleName(u)}</TableCell>
+                    <TableCell>{deptName(u) || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={u.status === "Active" ? "bg-success/15 text-success border-success/30" : "bg-muted text-muted-foreground"}>
                         {u.status}
