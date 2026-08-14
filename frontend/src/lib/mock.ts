@@ -57,11 +57,11 @@ export const mockProjects: Project[] = [
 ];
 
 export const mockAssets: Asset[] = [
-  { id: "A-001", tag: "LAP-0341", type: "Laptop", brand: "Dell", model: "Latitude 7440", serial: "DL7440-9381", location: "HQ Floor 4", assignedUser: "u3", purchaseDate: "2024-02-12", warrantyExpiry: "2027-02-12", status: "In Use" },
-  { id: "A-002", tag: "SW-014", type: "PoE Switch", brand: "Cisco", model: "CBS350-24P", serial: "CSC350-141", location: "HQ Floor 3 IDF", assignedUser: null, purchaseDate: "2023-08-01", warrantyExpiry: "2026-08-01", status: "In Use" },
-  { id: "A-003", tag: "CAM-012", type: "CCTV Camera", brand: "Hikvision", model: "DS-2CD2143", serial: "HKV-2143-12", location: "Lobby", assignedUser: null, purchaseDate: "2024-06-20", warrantyExpiry: "2026-06-20", status: "Faulty" },
-  { id: "A-004", tag: "RTR-002", type: "Router", brand: "MikroTik", model: "CCR2004", serial: "MK2004-02", location: "Server room", assignedUser: null, purchaseDate: "2024-01-05", warrantyExpiry: "2027-01-05", status: "In Use" },
-  { id: "A-005", tag: "PRN-007", type: "Printer", brand: "HP", model: "LaserJet M428", serial: "HPM428-7", location: "Floor 2", assignedUser: null, purchaseDate: "2023-11-15", warrantyExpiry: "2025-11-15", status: "In Use" },
+  { id: "A-001", tag: "LAP-0341", type: "Laptop", brand: "Dell", model: "Latitude 7440", serial: "DL7440-9381", location: "HQ Floor 4", assigneeName: "Maria Lopez", employeeCode: "EMP-1043", status: "In Use" },
+  { id: "A-002", tag: "SW-014", type: "PoE Switch", brand: "Cisco", model: "CBS350-24P", serial: "CSC350-141", location: "HQ Floor 3 IDF", assigneeName: "", employeeCode: "", status: "In Use" },
+  { id: "A-003", tag: "CAM-012", type: "CCTV Camera", brand: "Hikvision", model: "DS-2CD2143", serial: "HKV-2143-12", location: "Lobby", assigneeName: "", employeeCode: "", status: "Faulty" },
+  { id: "A-004", tag: "RTR-002", type: "Router", brand: "MikroTik", model: "CCR2004", serial: "MK2004-02", location: "Server room", assigneeName: "", employeeCode: "", status: "In Use" },
+  { id: "A-005", tag: "PRN-007", type: "Printer", brand: "HP", model: "LaserJet M428", serial: "HPM428-7", location: "Floor 2", assigneeName: "", employeeCode: "", status: "In Use" },
 ];
 
 export const mockNotifications: Notification[] = [

@@ -5,7 +5,7 @@ import { store } from "./store";
 import { ROLES } from "./mock";
 import {
   fromAsset, fromAuditLog, fromDepartment, fromNotification,
-  fromProject, fromRole, fromTask, fromTicket, fromUser, mapList, toTask, toTicket, toUser,
+  fromProject, fromRole, fromTask, fromTicket, fromUser, mapList, toAsset, toTask, toTicket, toUser,
 } from "./adapters";
 import type {
   Asset, AuditLog, Department, KnowledgeArticle, Notification, PermissionLevel,
@@ -269,7 +269,7 @@ export const assetsService = {
       audit("Create Asset", "Assets", `${created.tag} — ${created.model}`);
       return wait(created);
     }
-    const { data } = await api.post("/assets", a);
+    const { data } = await api.post("/assets", toAsset(a));
     return fromAsset(data);
   },
   update: async (id: string, a: Partial<Asset>): Promise<Asset> => {
@@ -279,7 +279,7 @@ export const assetsService = {
       audit("Update Asset", "Assets", `${updated.tag} — ${updated.model}`);
       return wait(updated);
     }
-    const { data } = await api.put(`/assets/${id}`, a);
+    const { data } = await api.put(`/assets/${id}`, toAsset(a));
     return fromAsset(data);
   },
   remove: async (id: string): Promise<void> => {

@@ -99,7 +99,10 @@ export type AssetType =
   | "Router"
   | "Switch"
   | "PoE Switch"
-  | "CCTV Camera";
+  | "CCTV Camera"
+  | "Phone"
+  | "Cable"
+  | "Monitor";
 
 export interface Asset {
   id: string;
@@ -109,9 +112,8 @@ export interface Asset {
   model: string;
   serial: string;
   location: string;
-  assignedUser: string | null;
-  purchaseDate: string;
-  warrantyExpiry: string;
+  assigneeName: string;
+  employeeCode: string;
   status: "In Use" | "In Storage" | "Faulty" | "Retired";
 }
 

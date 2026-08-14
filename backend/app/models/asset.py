@@ -13,8 +13,7 @@ class Asset(Base):
 
     id = Column(
         Integer,
-        primary_key=True,
-        index=True
+        primary_key=True
     )
 
     asset_tag = Column(
@@ -47,6 +46,12 @@ class Asset(Base):
         ForeignKey("users.id"),
         nullable=True
     )
+
+    assignee_name = Column(String, nullable=True)
+
+    employee_code = Column(String, nullable=True)
+
+    location = Column(String, nullable=True)
 
     purchase_date = Column(Date)
 

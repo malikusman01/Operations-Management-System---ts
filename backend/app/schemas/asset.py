@@ -10,6 +10,9 @@ class AssetCreate(BaseModel):
     model: str | None = None
     serial_number: str | None = None
     assigned_to: int | None = None
+    assignee_name: str | None = None
+    employee_code: str | None = None
+    location: str | None = None
     purchase_date: date | None = None
     warranty_expiry: date | None = None
     status: str = "Available"
@@ -24,6 +27,9 @@ class AssetResponse(BaseModel):
     model: str | None = None
     serial_number: str | None = None
     assigned_to: int | None = None
+    assignee_name: str | None = None
+    employee_code: str | None = None
+    location: str | None = None
     purchase_date: date | None = None
     warranty_expiry: date | None = None
     status: str

@@ -102,16 +102,31 @@ export const fromProject = (r: AnyRec): Project => ({
 
 export const fromAsset = (r: AnyRec): Asset => ({
   id: s(r.id),
-  tag: s(r.tag ?? r.asset_tag),
-  type: (r.type ?? "Laptop") as Asset["type"],
+  tag: s(r.asset_tag ?? r.tag ?? ""),
+  type: (r.category ?? r.type ?? "Laptop") as Asset["type"],
   brand: s(r.brand ?? ""),
   model: s(r.model ?? ""),
-  serial: s(r.serial ?? r.serial_number ?? ""),
+  serial: s(r.serial_number ?? r.serial ?? ""),
   location: s(r.location ?? ""),
-  assignedUser: r.assigned_user ? s(r.assigned_user) : (r.assignedUser ? s(r.assignedUser) : null),
-  purchaseDate: s(r.purchase_date ?? r.purchaseDate ?? ""),
-  warrantyExpiry: s(r.warranty_expiry ?? r.warrantyExpiry ?? ""),
+  assigneeName: s(r.assignee_name ?? r.assigneeName ?? ""),
+  employeeCode: s(r.employee_code ?? r.employeeCode ?? ""),
   status: (r.status ?? "In Use") as Asset["status"],
+});
+
+export const toAsset = (a: Partial<Asset>): AnyRec => ({
+  asset_tag: a.tag,
+  // Backend requires a `name` on every asset; derive it from brand+model
+  // (falling back to the type/tag) so the form doesn't need a separate,
+  // redundant "name" field.
+  name: [a.brand, a.model].filter(Boolean).join(" ").trim() || a.type || a.tag || "Asset",
+  category: a.type,
+  brand: a.brand,
+  model: a.model,
+  serial_number: a.serial,
+  location: a.location,
+  assignee_name: a.assigneeName,
+  employee_code: a.employeeCode,
+  status: a.status,
 });
 
 export const fromNotification = (r: AnyRec): Notification => ({

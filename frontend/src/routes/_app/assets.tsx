@@ -16,8 +16,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { PageHeader } from "@/components/app/page-header";
-import { assetsService, usersService } from "@/lib/services";
-import { fmtDate, userName } from "@/lib/format";
+import { assetsService } from "@/lib/services";
 import { Plus, Search, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import type { Asset, AssetType } from "@/lib/types";
@@ -27,23 +26,25 @@ export const Route = createFileRoute("/_app/assets")({
   component: AssetsPage,
 });
 
-const TYPES: AssetType[] = ["Laptop", "Desktop", "Printer", "Router", "Switch", "PoE Switch", "CCTV Camera"];
+const TYPES: AssetType[] = [
+  "Laptop", "Desktop", "Printer", "Router", "Switch", "PoE Switch",
+  "CCTV Camera", "Phone", "Cable", "Monitor",
+];
 const STATUSES = ["In Use", "In Storage", "Faulty", "Retired"] as const;
 
 type FormState = {
   tag: string; type: AssetType; brand: string; model: string; serial: string;
-  location: string; assignedUser: string; purchaseDate: string; warrantyExpiry: string;
+  location: string; assigneeName: string; employeeCode: string;
   status: Asset["status"];
 };
 const emptyForm: FormState = {
   tag: "", type: "Laptop", brand: "", model: "", serial: "", location: "",
-  assignedUser: "", purchaseDate: "", warrantyExpiry: "", status: "In Storage",
+  assigneeName: "", employeeCode: "", status: "In Storage",
 };
 
 function AssetsPage() {
   const qc = useQueryClient();
   const { data: assets = [], isLoading } = useQuery({ queryKey: ["assets"], queryFn: assetsService.list });
-  const { data: users = [] } = useQuery({ queryKey: ["users"], queryFn: usersService.list });
   const [q, setQ] = useState("");
   const [type, setType] = useState("all");
 
@@ -54,16 +55,25 @@ function AssetsPage() {
 
   const filtered = useMemo(() => assets.filter((a) =>
     (type === "all" || a.type === type) &&
-    (q === "" || a.tag.toLowerCase().includes(q.toLowerCase()) || a.serial.toLowerCase().includes(q.toLowerCase()) || a.model.toLowerCase().includes(q.toLowerCase()))
+    (q === "" ||
+      a.tag.toLowerCase().includes(q.toLowerCase()) ||
+      a.serial.toLowerCase().includes(q.toLowerCase()) ||
+      a.model.toLowerCase().includes(q.toLowerCase()) ||
+      a.assigneeName.toLowerCase().includes(q.toLowerCase()) ||
+      a.employeeCode.toLowerCase().includes(q.toLowerCase()))
   ), [assets, q, type]);
 
   const invalidate = () => qc.invalidateQueries({ queryKey: ["assets"] });
 
   const asPayload = () => ({
-    tag: form.tag, type: form.type, brand: form.brand, model: form.model, serial: form.serial,
-    location: form.location, assignedUser: form.assignedUser || null,
-    purchaseDate: form.purchaseDate ? new Date(form.purchaseDate).toISOString() : undefined,
-    warrantyExpiry: form.warrantyExpiry ? new Date(form.warrantyExpiry).toISOString() : undefined,
+    tag: form.tag,
+    type: form.type,
+    brand: form.brand,
+    model: form.model,
+    serial: form.serial,
+    location: form.location,
+    assigneeName: form.assigneeName,
+    employeeCode: form.employeeCode,
     status: form.status,
   });
 
@@ -90,8 +100,7 @@ function AssetsPage() {
     setEditingId(a.id);
     setForm({
       tag: a.tag, type: a.type, brand: a.brand, model: a.model, serial: a.serial,
-      location: a.location, assignedUser: a.assignedUser ?? "",
-      purchaseDate: a.purchaseDate?.slice(0, 10) ?? "", warrantyExpiry: a.warrantyExpiry?.slice(0, 10) ?? "",
+      location: a.location, assigneeName: a.assigneeName, employeeCode: a.employeeCode,
       status: a.status,
     });
     setOpen(true);
@@ -157,24 +166,14 @@ function AssetsPage() {
                     <Input id="location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
                   </div>
                 </div>
-                <div>
-                  <Label>Assigned user (optional)</Label>
-                  <Select value={form.assignedUser || "none"} onValueChange={(v) => setForm({ ...form, assignedUser: v === "none" ? "" : v })}>
-                    <SelectTrigger><SelectValue placeholder="Unassigned" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">Unassigned</SelectItem>
-                      {users.map((u) => <SelectItem key={u.id} value={u.id}>{u.fullName}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label htmlFor="purchaseDate">Purchase date</Label>
-                    <Input id="purchaseDate" type="date" value={form.purchaseDate} onChange={(e) => setForm({ ...form, purchaseDate: e.target.value })} />
+                    <Label htmlFor="assigneeName">Assignee name</Label>
+                    <Input id="assigneeName" placeholder="e.g. Maria Lopez" value={form.assigneeName} onChange={(e) => setForm({ ...form, assigneeName: e.target.value })} />
                   </div>
                   <div>
-                    <Label htmlFor="warrantyExpiry">Warranty expiry</Label>
-                    <Input id="warrantyExpiry" type="date" value={form.warrantyExpiry} onChange={(e) => setForm({ ...form, warrantyExpiry: e.target.value })} />
+                    <Label htmlFor="employeeCode">Employee code</Label>
+                    <Input id="employeeCode" placeholder="e.g. EMP-1043" value={form.employeeCode} onChange={(e) => setForm({ ...form, employeeCode: e.target.value })} />
                   </div>
                 </div>
                 <div>
@@ -202,7 +201,7 @@ function AssetsPage() {
         <CardContent className="flex flex-col gap-3 p-4 md:flex-row">
           <div className="relative md:max-w-xs md:flex-1">
             <Search className="absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input placeholder="Search tag, serial, model…" className="pl-8" value={q} onChange={(e) => setQ(e.target.value)} />
+            <Input placeholder="Search tag, serial, model, assignee…" className="pl-8" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger className="md:w-48"><SelectValue placeholder="Type" /></SelectTrigger>
@@ -221,8 +220,8 @@ function AssetsPage() {
               <TableRow>
                 <TableHead>Tag</TableHead><TableHead>Type</TableHead>
                 <TableHead>Model</TableHead><TableHead>Serial</TableHead>
-                <TableHead>Location</TableHead><TableHead>Assigned</TableHead>
-                <TableHead>Warranty</TableHead><TableHead>Status</TableHead>
+                <TableHead>Location</TableHead><TableHead>Assignee</TableHead>
+                <TableHead>Employee code</TableHead><TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -235,8 +234,8 @@ function AssetsPage() {
                   <TableCell>{a.brand} {a.model}</TableCell>
                   <TableCell className="font-mono text-xs">{a.serial}</TableCell>
                   <TableCell className="text-muted-foreground">{a.location}</TableCell>
-                  <TableCell>{a.assignedUser ? userName(a.assignedUser) : <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="text-muted-foreground">{fmtDate(a.warrantyExpiry)}</TableCell>
+                  <TableCell>{a.assigneeName || <span className="text-muted-foreground">—</span>}</TableCell>
+                  <TableCell className="text-muted-foreground">{a.employeeCode || "—"}</TableCell>
                   <TableCell><Badge variant="outline" className={statusTone(a.status)}>{a.status}</Badge></TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" onClick={() => openEdit(a)}><Pencil className="h-3.5 w-3.5" /></Button>

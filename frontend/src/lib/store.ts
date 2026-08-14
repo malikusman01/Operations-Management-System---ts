@@ -251,9 +251,8 @@ export const store = {
         model: a.model ?? "",
         serial: a.serial ?? "",
         location: a.location ?? "",
-        assignedUser: a.assignedUser ?? null,
-        purchaseDate: a.purchaseDate ?? new Date().toISOString(),
-        warrantyExpiry: a.warrantyExpiry ?? new Date().toISOString(),
+        assigneeName: a.assigneeName ?? "",
+        employeeCode: a.employeeCode ?? "",
         status: a.status ?? "In Storage",
       };
       db.assets = [created, ...db.assets];
