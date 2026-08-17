@@ -7,6 +7,8 @@ from sqlalchemy.orm import Session
 
 from app.db.database import get_db
 from app.models.task import Task
+from app.models.user import User
+from app.core.security import get_current_user, get_current_role_name, require_manager, MANAGER_ROLES
 
 from app.schemas.task import (
     TaskCreate,
@@ -22,15 +24,24 @@ router = APIRouter(
 
 @router.get("", response_model=list[TaskResponse])
 def get_tasks(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
 ):
-    return db.query(Task).all()
+    query = db.query(Task)
+
+    if role_name not in MANAGER_ROLES:
+        query = query.filter(Task.assigned_to == user.id)
+
+    return query.all()
 
 
 @router.get("/{task_id}", response_model=TaskResponse)
 def get_task(
     task_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
 ):
     task = db.query(Task).filter(
         Task.id == task_id
@@ -42,20 +53,27 @@ def get_task(
             detail="Task not found"
         )
 
+    if role_name not in MANAGER_ROLES and task.assigned_to != user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view this task"
+        )
+
     return task
 
 
 @router.post("", response_model=TaskResponse)
 def create_task(
     data: TaskCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_manager),
 ):
     task = Task(
         title=data.title,
         description=data.description,
         priority=data.priority,
         status=data.status,
-        assigned_by=data.assigned_by,
+        assigned_by=data.assigned_by or manager.id,
         assigned_to=data.assigned_to,
         deadline=data.deadline
     )
@@ -69,7 +87,7 @@ def create_task(
         action="CREATE",
         module="TASKS",
         description=f"Task '{task.title}' created",
-        user_id=data.assigned_by
+        user_id=task.assigned_by
     )
 
     return task
@@ -79,7 +97,8 @@ def create_task(
 def update_task(
     task_id: int,
     data: TaskUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_manager),
 ):
     task = db.query(Task).filter(
         Task.id == task_id
@@ -108,7 +127,8 @@ def update_task(
 @router.delete("/{task_id}")
 def delete_task(
     task_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_manager),
 ):
     task = db.query(Task).filter(
         Task.id == task_id

@@ -1,14 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
-from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.db.database import get_db
 from app.models.user import User
 from app.models.role import Role
 from app.models.department import Department
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token, verify_password, get_current_user
 
 router = APIRouter(
     prefix="/auth",
@@ -42,37 +40,11 @@ def login(
     }
 
 
-def _get_current_user(authorization: str | None, db: Session) -> User:
-    if not authorization:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-
-    token = authorization.replace("Bearer ", "")
-
-    try:
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        user_id = payload.get("user_id")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-    user = db.query(User).filter(User.id == user_id).first()
-
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    return user
-
-
 @router.get("/me")
 def get_me(
-    authorization: str = Header(None),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    user = _get_current_user(authorization, db)
-
     role_name = (
         db.query(Role.name).filter(Role.id == user.role_id).scalar()
         if user.role_id
@@ -91,13 +63,13 @@ def get_me(
         "full_name": user.full_name,
         "email": user.email,
         "role": role_name,
+        "role_id": user.role_id,
         "department": department_name,
+        "department_id": user.department_id,
         "is_active": user.is_active,
     }
 
 
 @router.post("/logout")
 def logout():
-    # JWTs are stateless — the frontend just discards the token.
-    # If you later add refresh tokens or a blacklist, revoke them here.
     return {"message": "Logged out"}

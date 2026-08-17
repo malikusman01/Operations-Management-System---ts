@@ -4,26 +4,31 @@ import {
   HardDrive, Network, BookOpen, BarChart3, Bell, ScrollText, Settings, ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth-context";
+import { isManager } from "@/lib/permissions";
 
 const nav = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/tasks", label: "Tasks", icon: ListChecks },
-  { to: "/projects", label: "Projects", icon: FolderKanban },
-  { to: "/users", label: "Users", icon: Users },
-  { to: "/roles", label: "Roles", icon: ShieldCheck },
-  { to: "/departments", label: "Departments", icon: Building2 },
-  { to: "/tickets", label: "Tickets", icon: TicketCheck },
-  { to: "/assets", label: "Assets", icon: HardDrive },
-  { to: "/infrastructure", label: "Infrastructure", icon: Network },
-  { to: "/knowledge-base", label: "Knowledge Base", icon: BookOpen },
-  { to: "/reports", label: "Reports", icon: BarChart3 },
-  { to: "/notifications", label: "Notifications", icon: Bell },
-  { to: "/audit-logs", label: "Audit Logs", icon: ScrollText },
-  { to: "/settings", label: "Settings", icon: Settings },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, managerOnly: false },
+  { to: "/tasks", label: "Tasks", icon: ListChecks, managerOnly: false },
+  { to: "/projects", label: "Projects", icon: FolderKanban, managerOnly: true },
+  { to: "/users", label: "Users", icon: Users, managerOnly: true },
+  { to: "/roles", label: "Roles", icon: ShieldCheck, managerOnly: true },
+  { to: "/departments", label: "Departments", icon: Building2, managerOnly: true },
+  { to: "/tickets", label: "Tickets", icon: TicketCheck, managerOnly: false },
+  { to: "/assets", label: "Assets", icon: HardDrive, managerOnly: true },
+  { to: "/infrastructure", label: "Infrastructure", icon: Network, managerOnly: true },
+  { to: "/knowledge-base", label: "Knowledge Base", icon: BookOpen, managerOnly: true },
+  { to: "/reports", label: "Reports", icon: BarChart3, managerOnly: true },
+  { to: "/notifications", label: "Notifications", icon: Bell, managerOnly: false },
+  { to: "/audit-logs", label: "Audit Logs", icon: ScrollText, managerOnly: true },
+  { to: "/settings", label: "Settings", icon: Settings, managerOnly: false },
 ] as const;
 
 export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const manager = isManager(user?.role);
+  const items = nav.filter((item) => manager || !item.managerOnly);
 
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
@@ -38,7 +43,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
       </div>
       <nav className="scrollbar-thin flex-1 overflow-y-auto p-3">
         <ul className="space-y-0.5">
-          {nav.map((item) => {
+          {items.map((item) => {
             const active = pathname === item.to || pathname.startsWith(item.to + "/");
             const Icon = item.icon;
             return (

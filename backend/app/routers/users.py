@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
+from app.core.security import require_manager, get_current_user
 from app.models.user import User
 from app.core.security import hash_password
 from app.schemas.user import UserCreate, UserUpdate, UserResponse
@@ -13,22 +14,22 @@ router = APIRouter(
 
 
 @router.get("", response_model=list[UserResponse])
-def get_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db), user: User = Depends(get_current_user)):
     return db.query(User).all()
 
 
 @router.get("/{user_id}", response_model=UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
+def get_user(user_id: int, db: Session = Depends(get_db), user: User = Depends(get_current_user)):
+    found = db.query(User).filter(User.id == user_id).first()
 
-    if not user:
+    if not found:
         raise HTTPException(status_code=404, detail="User not found")
 
-    return user
+    return found
 
 
 @router.post("", response_model=UserResponse)
-def create_user(data: UserCreate, db: Session = Depends(get_db)):
+def create_user(data: UserCreate, db: Session = Depends(get_db), manager: User = Depends(require_manager)):
     existing = db.query(User).filter(User.email == data.email).first()
 
     if existing:
@@ -51,7 +52,7 @@ def create_user(data: UserCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{user_id}", response_model=UserResponse)
-def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db)):
+def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db), manager: User = Depends(require_manager)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
@@ -72,7 +73,7 @@ def update_user(user_id: int, data: UserUpdate, db: Session = Depends(get_db)):
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
+def delete_user(user_id: int, db: Session = Depends(get_db), manager: User = Depends(require_manager)):
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:

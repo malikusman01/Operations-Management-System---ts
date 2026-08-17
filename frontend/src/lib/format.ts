@@ -1,10 +1,11 @@
 import { USE_MOCK } from "./api";
 import { mockUsers } from "./mock";
 import { store } from "./store";
+import type { User } from "./types";
 
-export const userName = (id: string) => {
-  const users = USE_MOCK ? store.users.list() : mockUsers;
-  return users.find((u) => u.id === id)?.fullName ?? id;
+export const userName = (id: string, users?: User[]) => {
+  const list = users ?? (USE_MOCK ? store.users.list() : mockUsers);
+  return list.find((u) => u.id === id)?.fullName ?? id;
 };
 
 export const fmtDate = (s: string) =>

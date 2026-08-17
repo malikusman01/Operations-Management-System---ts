@@ -3,9 +3,12 @@ from fastapi import Depends
 from fastapi import HTTPException
 
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 from app.db.database import get_db
 from app.models.ticket import Ticket
+from app.models.user import User
+from app.core.security import get_current_user, get_current_role_name, require_manager, MANAGER_ROLES
 
 from app.schemas.ticket import (
     TicketCreate,
@@ -21,15 +24,26 @@ router = APIRouter(
 
 @router.get("", response_model=list[TicketResponse])
 def get_tickets(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
 ):
-    return db.query(Ticket).all()
+    query = db.query(Ticket)
+
+    if role_name not in MANAGER_ROLES:
+        query = query.filter(
+            or_(Ticket.created_by == user.id, Ticket.assigned_to == user.id)
+        )
+
+    return query.all()
 
 
 @router.get("/{ticket_id}", response_model=TicketResponse)
 def get_ticket(
     ticket_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
 ):
     ticket = db.query(Ticket).filter(
         Ticket.id == ticket_id
@@ -41,20 +55,28 @@ def get_ticket(
             detail="Ticket not found"
         )
 
+    is_owner = ticket.created_by == user.id or ticket.assigned_to == user.id
+    if role_name not in MANAGER_ROLES and not is_owner:
+        raise HTTPException(
+            status_code=403,
+            detail="Not authorized to view this ticket"
+        )
+
     return ticket
 
 
 @router.post("", response_model=TicketResponse)
 def create_ticket(
     data: TicketCreate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
 ):
     ticket = Ticket(
         title=data.title,
         description=data.description,
         status=data.status,
         priority=data.priority,
-        created_by=data.created_by,
+        created_by=user.id,
         assigned_to=data.assigned_to
     )
 
@@ -69,7 +91,8 @@ def create_ticket(
 def update_ticket(
     ticket_id: int,
     data: TicketUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_manager),
 ):
     ticket = db.query(Ticket).filter(
         Ticket.id == ticket_id
@@ -97,7 +120,8 @@ def update_ticket(
 @router.delete("/{ticket_id}")
 def delete_ticket(
     ticket_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    manager: User = Depends(require_manager),
 ):
     ticket = db.query(Ticket).filter(
         Ticket.id == ticket_id
