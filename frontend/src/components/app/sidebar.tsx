@@ -6,6 +6,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/lib/auth-context";
 import { isManager } from "@/lib/permissions";
+import { Logo } from "./logo";
 
 const nav = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, managerOnly: false },
@@ -33,9 +34,9 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-5">
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground font-bold">
-          IT
-        </div>
+        <div className="flex h-16 items-center border-b border-sidebar-border px-5">
+        <Logo />
+      </div>
         <div>
           <p className="text-sm font-semibold leading-none">ITOMS</p>
           <p className="text-[11px] text-sidebar-foreground/60">IT Operations</p>
