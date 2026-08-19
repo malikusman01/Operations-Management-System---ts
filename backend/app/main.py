@@ -23,6 +23,9 @@ from app.routers.audit_logs import router as audit_logs_router
 from app.routers.departments import router as departments_router
 from app.routers.roles import router as roles_router
 
+from app.models.asset import Asset
+from app.models.audit_log import AuditLog
+from app.models.notification import Notification
 
 app = FastAPI(
     title="ITOMS API",

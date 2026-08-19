@@ -16,6 +16,9 @@ from app.schemas.task import (
     TaskResponse
 )
 
+from app.utils.audit import create_log
+from app.utils.notifications import create_notification
+
 router = APIRouter(
     prefix="/tasks",
     tags=["Tasks"]
@@ -88,6 +91,13 @@ def create_task(
         module="TASKS",
         description=f"Task '{task.title}' created",
         user_id=task.assigned_by
+    )    
+    create_notification(
+        db=db,
+        user_id=task.assigned_to,
+        type="Task Assigned",
+        title=f"New task: {task.title}",
+        body=f"Assigned by {manager.full_name}"
     )
 
     return task
@@ -110,6 +120,9 @@ def update_task(
             detail="Task not found"
         )
 
+
+    previous_assignee = task.assigned_to
+
     task.title = data.title
     task.description = data.description
     task.priority = data.priority
@@ -120,6 +133,15 @@ def update_task(
 
     db.commit()
     db.refresh(task)
+
+    if data.assigned_to and data.assigned_to != previous_assignee:
+        create_notification(
+            db=db,
+            user_id=data.assigned_to,
+            type="Task Assigned",
+            title=f"Task reassigned to you: {task.title}",
+            body=f"Reassigned by {manager.full_name}"
+        )
 
     return task
 

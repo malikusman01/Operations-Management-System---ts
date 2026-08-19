@@ -16,6 +16,9 @@ from app.schemas.ticket import (
     TicketResponse
 )
 
+from app.core.security import get_current_user, get_current_role_name, require_manager, MANAGER_ROLES
+from app.utils.notifications import create_notification
+
 router = APIRouter(
     prefix="/tickets",
     tags=["Tickets"]
@@ -104,6 +107,8 @@ def update_ticket(
             detail="Ticket not found"
         )
 
+    previous_assignee = ticket.assigned_to
+
     ticket.title = data.title
     ticket.description = data.description
     ticket.status = data.status
@@ -113,6 +118,15 @@ def update_ticket(
 
     db.commit()
     db.refresh(ticket)
+
+    if data.assigned_to and data.assigned_to != previous_assignee:
+        create_notification(
+            db=db,
+            user_id=data.assigned_to,
+            type="Ticket Updates",
+            title=f"Ticket assigned to you: {ticket.title}",
+            body=f"Assigned by {manager.full_name}"
+        )
 
     return ticket
 
