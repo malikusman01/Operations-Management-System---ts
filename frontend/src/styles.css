@@ -149,3 +149,44 @@
   &::-webkit-scrollbar { width: 6px; height: 6px; }
   &::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 3px; }
 }
+/* ---- Login page: animated operations console ---- */
+@keyframes login-pulse-glow {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+@keyframes login-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes login-ticker-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes login-shimmer {
+  from { transform: translateX(-150%) skewX(-15deg); }
+  to { transform: translateX(250%) skewX(-15deg); }
+}
+@keyframes login-grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 48px 48px; }
+}
+
+@utility login-node-pulse {
+  animation: login-pulse-glow 2.6s ease-in-out infinite;
+}
+@utility login-fade-up {
+  animation: login-fade-up 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility login-ticker-row {
+  animation: login-ticker-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@utility login-shimmer-sweep {
+  animation: login-shimmer 2.2s ease-in-out infinite;
+}
+@utility login-grid-bg {
+  background-image:
+    linear-gradient(rgba(148, 178, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 178, 255, 0.07) 1px, transparent 1px);
+  background-size: 48px 48px;
+  animation: login-grid-drift 20s linear infinite;
+}

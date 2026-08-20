@@ -27,8 +27,8 @@ export function Logo({ size = 36, showWordmark = true }: { size?: number; showWo
       <LogoMark size={size} />
       {showWordmark && (
         <div>
-          <p className="text-sm font-semibold leading-none">ITOMS</p>
-          <p className="text-[11px] text-sidebar-foreground/60">IT Operations</p>
+          <p className="text-sm font-semibold leading-none"></p>
+          <p className="text-[11px] text-sidebar-foreground/60"></p>
         </div>
       )}
     </div>
