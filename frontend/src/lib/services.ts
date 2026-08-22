@@ -178,6 +178,31 @@ export const tasksService = {
     }
     await api.delete(`/tasks/${id}`);
   },
+    startTimer: async (id: string): Promise<Task> => {
+    if (USE_MOCK) {
+      const updated = store.tasks.update(id, { timerRunningSince: new Date().toISOString() });
+      if (!updated) throw new Error("Task not found");
+      return wait(updated);
+    }
+    const { data } = await api.post(`/tasks/${id}/timer/start`);
+    return fromTask(data);
+  },
+  stopTimer: async (id: string): Promise<Task> => {
+    if (USE_MOCK) {
+      const existing = store.tasks.get(id);
+      if (!existing) throw new Error("Task not found");
+      const startedAt = existing.timerRunningSince ? new Date(existing.timerRunningSince).getTime() : Date.now();
+      const elapsed = Math.max(0, Math.floor((Date.now() - startedAt) / 1000));
+      const updated = store.tasks.update(id, {
+        timeSpentSeconds: (existing.timeSpentSeconds ?? 0) + elapsed,
+        timerRunningSince: null,
+      });
+      if (!updated) throw new Error("Task not found");
+      return wait(updated);
+    }
+    const { data } = await api.post(`/tasks/${id}/timer/stop`);
+    return fromTask(data);
+  },
 };
 
 export const ticketsService = {

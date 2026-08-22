@@ -39,3 +39,13 @@ class Task(Base):
     )
 
     deadline = Column(DateTime)
+
+    time_spent_seconds = Column(
+        Integer,
+        default=0
+    )
+
+    timer_running_since = Column(
+        DateTime,
+        nullable=True
+    )

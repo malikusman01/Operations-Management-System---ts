@@ -157,9 +157,12 @@ export const store = {
         assignedTo: t.assignedTo ?? "",
         assignmentDate: t.assignmentDate ?? new Date().toISOString(),
         deadline: t.deadline ?? new Date().toISOString(),
-        status: t.status ?? "Assigned",
+                status: t.status ?? "Assigned",
         remarks: t.remarks,
+        timeSpentSeconds: t.timeSpentSeconds ?? 0,
+        timerRunningSince: t.timerRunningSince ?? null,
       };
+    
       db.tasks = [created, ...db.tasks];
       persist();
       return created;

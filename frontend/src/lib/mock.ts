@@ -30,14 +30,22 @@ export const mockDepartments: Department[] = [
 ];
 
 export const mockTasks: Task[] = [
-  { id: "T-1042", title: "Renew SSL certificates for prod cluster", description: "Rotate certs across edge nodes before Friday.", priority: "Critical", assignedBy: "u1", assignedTo: "u2", assignmentDate: "2025-06-01", deadline: "2025-06-12", status: "In Progress", remarks: "Cert ordered" },
-  { id: "T-1043", title: "Upgrade office switches firmware", description: "Apply latest stable firmware to 14 switches.", priority: "High", assignedBy: "u1", assignedTo: "u2", assignmentDate: "2025-06-03", deadline: "2025-06-15", status: "Assigned" },
-  { id: "T-1044", title: "Onboard 3 new developers", description: "Provision laptops, accounts and VPN.", priority: "Medium", assignedBy: "u6", assignedTo: "u4", assignmentDate: "2025-06-04", deadline: "2025-06-11", status: "Pending" },
-  { id: "T-1045", title: "Migrate intranet to new server", description: "Cutover during weekend window.", priority: "High", assignedBy: "u1", assignedTo: "u3", assignmentDate: "2025-05-28", deadline: "2025-06-08", status: "Overdue" },
-  { id: "T-1046", title: "Backup verification — quarterly", description: "Validate restore from last 4 snapshots.", priority: "Medium", assignedBy: "u1", assignedTo: "u5", assignmentDate: "2025-05-20", deadline: "2025-06-05", status: "Completed" },
-  { id: "T-1047", title: "Replace failed PoE switch — Floor 3", description: "RMA processed, install replacement.", priority: "Critical", assignedBy: "u6", assignedTo: "u4", assignmentDate: "2025-06-06", deadline: "2025-06-10", status: "Waiting Approval" },
-  { id: "T-1048", title: "Document new VPN onboarding flow", description: "Add to KB.", priority: "Low", assignedBy: "u1", assignedTo: "u3", assignmentDate: "2025-06-02", deadline: "2025-06-20", status: "In Progress" },
-  { id: "T-1049", title: "Audit dormant AD accounts", description: "Disable accounts inactive >90d.", priority: "Medium", assignedBy: "u1", assignedTo: "u5", assignmentDate: "2025-06-01", deadline: "2025-06-14", status: "Cancelled" },
+  { id: "T-1042", title: "Renew SSL certificates for prod cluster", description: "Rotate certs across edge nodes before Friday.", priority: "Critical", assignedBy: "u1", assignedTo: "u2", assignmentDate: "2025-06-01", deadline: "2025-06-12", status: "In Progress", remarks: "Cert ordered",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1043", title: "Upgrade office switches firmware", description: "Apply latest stable firmware to 14 switches.", priority: "High", assignedBy: "u1", assignedTo: "u2", assignmentDate: "2025-06-03", deadline: "2025-06-15", status: "Assigned",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1044", title: "Onboard 3 new developers", description: "Provision laptops, accounts and VPN.", priority: "Medium", assignedBy: "u6", assignedTo: "u4", assignmentDate: "2025-06-04", deadline: "2025-06-11", status: "Pending",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1045", title: "Migrate intranet to new server", description: "Cutover during weekend window.", priority: "High", assignedBy: "u1", assignedTo: "u3", assignmentDate: "2025-05-28", deadline: "2025-06-08", status: "Overdue",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1046", title: "Backup verification — quarterly", description: "Validate restore from last 4 snapshots.", priority: "Medium", assignedBy: "u1", assignedTo: "u5", assignmentDate: "2025-05-20", deadline: "2025-06-05", status: "Completed",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1047", title: "Replace failed PoE switch — Floor 3", description: "RMA processed, install replacement.", priority: "Critical", assignedBy: "u6", assignedTo: "u4", assignmentDate: "2025-06-06", deadline: "2025-06-10", status: "Waiting Approval",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1048", title: "Document new VPN onboarding flow", description: "Add to KB.", priority: "Low", assignedBy: "u1", assignedTo: "u3", assignmentDate: "2025-06-02", deadline: "2025-06-20", status: "In Progress",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
+  { id: "T-1049", title: "Audit dormant AD accounts", description: "Disable accounts inactive >90d.", priority: "Medium", assignedBy: "u1", assignedTo: "u5", assignmentDate: "2025-06-01", deadline: "2025-06-14", status: "Cancelled",    timeSpentSeconds: 0,
+    timerRunningSince: null, },
 ];
 
 export const mockTickets: Ticket[] = [

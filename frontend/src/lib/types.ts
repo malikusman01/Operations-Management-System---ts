@@ -56,6 +56,8 @@ export interface Task {
   deadline: string;
   status: TaskStatus;
   remarks?: string;
+  timeSpentSeconds: number;
+  timerRunningSince: string | null;
 }
 
 export type TicketCategory =

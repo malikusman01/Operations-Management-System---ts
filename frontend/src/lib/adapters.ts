@@ -55,6 +55,8 @@ export const fromTask = (r: AnyRec): Task => ({
   deadline: s(r.deadline ?? r.due_date ?? ""),
   status: (r.status ?? "Assigned") as Task["status"],
   remarks: r.remarks ? s(r.remarks) : undefined,
+  timeSpentSeconds: Number(r.time_spent_seconds ?? r.timeSpentSeconds ?? 0),
+  timerRunningSince: r.timer_running_since != null ? s(r.timer_running_since) : ((r.timerRunningSince as string | null) ?? null),
 });
 
 export const toTask = (t: Partial<Task>): AnyRec => ({

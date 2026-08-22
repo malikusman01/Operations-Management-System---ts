@@ -18,6 +18,7 @@ from app.schemas.task import (
 
 from app.utils.audit import create_log
 from app.utils.notifications import create_notification
+from datetime import datetime
 
 router = APIRouter(
     prefix="/tasks",
@@ -168,3 +169,66 @@ def delete_task(
     return {
         "message": "Task deleted successfully"
     }
+
+
+def _authorize_timer(task: Task, user: User, role_name: str | None):
+    # The assignee runs their own timer day to day; a manager can also
+    # start/stop it (e.g. correcting a forgotten stop).
+    if role_name in MANAGER_ROLES or task.assigned_to == user.id:
+        return
+    raise HTTPException(
+        status_code=403,
+        detail="Not authorized to control this task's timer"
+    )
+
+
+@router.post("/{task_id}/timer/start", response_model=TaskResponse)
+def start_task_timer(
+    task_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    _authorize_timer(task, user, role_name)
+
+    if task.timer_running_since is not None:
+        raise HTTPException(status_code=400, detail="Timer is already running")
+
+    task.timer_running_since = datetime.utcnow()
+
+    db.commit()
+    db.refresh(task)
+
+    return task
+
+
+@router.post("/{task_id}/timer/stop", response_model=TaskResponse)
+def stop_task_timer(
+    task_id: int,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_current_user),
+    role_name: str | None = Depends(get_current_role_name),
+):
+    task = db.query(Task).filter(Task.id == task_id).first()
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    _authorize_timer(task, user, role_name)
+
+    if task.timer_running_since is None:
+        raise HTTPException(status_code=400, detail="Timer is not running")
+
+    elapsed = (datetime.utcnow() - task.timer_running_since).total_seconds()
+    task.time_spent_seconds = (task.time_spent_seconds or 0) + max(0, int(elapsed))
+    task.timer_running_since = None
+
+    db.commit()
+    db.refresh(task)
+
+    return task

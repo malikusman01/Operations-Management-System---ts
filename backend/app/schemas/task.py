@@ -23,6 +23,8 @@ class TaskUpdate(TaskBase):
 
 class TaskResponse(TaskBase):
     id: int
+    time_spent_seconds: int = 0
+    timer_running_since: Optional[datetime] = None
 
     class Config:
         from_attributes = True
